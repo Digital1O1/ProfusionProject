@@ -1,12 +1,17 @@
 #!/usr/bin/python3
 import time
-import threading
 import subprocess
 import numpy as np
 from pidng.core import RAW2DNG, DNGTags, Tag
 from pidng.defs import *
-from picamera2 import Picamera2
+from picamera2 import Picamera2, Preview
 from picamera2.encoders import Encoder
+import os
+
+# Function to ensure the save directory exists
+def ensure_directory(save_dir):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
 # Function to run a bash script
 def run_bash_script(script_path):
@@ -22,6 +27,7 @@ def run_bash_script(script_path):
 def start_recording(camera, encoder, filename, pts_filename, save_dir, recording_counter):
     rawVideoFilePath = f"{save_dir}/{filename}_{recording_counter}.raw"
     timeStampFilePath = f"{save_dir}/{pts_filename}_{recording_counter}.txt"
+    print(f"Recording video to {rawVideoFilePath} and timestamp to {timeStampFilePath}")
     camera.start_recording(encoder, rawVideoFilePath, pts=timeStampFilePath)
 
 # Function for a countdown timer
@@ -60,6 +66,9 @@ size = (1920, 1080)
 save_dir = "/home/pi/ProfusionProject/RecordRawVideo/captureFolder"
 recording_counter = 0  # Initialize recording counter
 
+# Ensure the save directory exists
+ensure_directory(save_dir)
+
 print("\n\n\n================= Initializing camera parameters =================")
 
 camera0 = Picamera2(camera_num=0)
@@ -80,35 +89,52 @@ print("\n================= DONE =================")
 # Input time in seconds
 duration = int(input("Enter the recording duration in seconds: "))
 
-# Start parallel recording
-# recordCamera0 = threading.Thread(target=start_recording, args=(camera0, encoder0, 'test0', 'timestamp0', save_dir, recording_counter))
-# recordCamera1 = threading.Thread(target=start_recording, args=(camera1, encoder1, 'test1', 'timestamp1', save_dir, recording_counter))
+# Start preview for both cameras
+camera0.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
+camera1.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
+
+preview_config0 = camera0.create_preview_configuration()
+preview_config1 = camera1.create_preview_configuration()
+
+# Configure both cameras
+camera0.configure(preview_config0)
+camera1.configure(preview_config1)
+
+# Start both cameras for preview
+camera0.start()
+camera1.start()
+
+print("Press Enter to start recording..")
+input()  # Wait for Enter to be pressed
+
+# Stop the previews after Enter is pressed
+camera0.stop()
+camera1.stop()
+
+# Optionally add a short delay between stopping preview and starting recording
+time.sleep(1)  # You can adjust this delay as necessary
 
 print("\n================= Recording video now for " + str(duration) + " seconds =================")
 
-# recordCamera0.start()
-# recordCamera1.start()
-
-# Testing non-thread
-# picam2.start_recording(encoder, 'test.raw', pts='timestamp.txt')
-camera0.start_recording(encoder0,'test0.raw',pts="timestamp0.txt")
-camera1.start_recording(encoder1,'test1.raw',pts="timestamp1.txt")
+# Start recording for both cameras
+camera0.start_recording(encoder0, f'{save_dir}/test0_{recording_counter}.raw', pts=f"{save_dir}/timestamp0_{recording_counter}.txt")
+camera1.start_recording(encoder1, f'{save_dir}/test1_{recording_counter}.raw', pts=f"{save_dir}/timestamp1_{recording_counter}.txt")
 
 # Start countdown timer
 countdown_timer(duration)
 
-# Stop parallel recording
-# recordCamera0.join()
-# recordCamera1.join()
-
+# Stop recording
 camera0.stop_recording()
 camera1.stop_recording()
+
+# Increment the recording counter for the next recording
+recording_counter += 1
 
 print("\n================= Processing Data =================")
 
 # Process raw data
 def process_camera_data(filename, size, camera_number):
-    raw_file = f"{save_dir}/{filename}_{recording_counter}.raw"
+    raw_file = f"{save_dir}/{filename}_{recording_counter-1}.raw"  # Correct the counter to the previous file
     with open(raw_file, "rb") as f:
         buf = f.read(size[0] * size[1] * 2)
     arr = np.frombuffer(buf, dtype=np.uint16).reshape((size[1], size[0]))
