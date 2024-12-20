@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import time
+import threading
 import subprocess
 import numpy as np
 from pidng.core import RAW2DNG, DNGTags, Tag
@@ -63,7 +64,7 @@ def create_dng(arr, size, camera_number, save_dir):
 
 # Main script
 size = (1920, 1080)
-save_dir = "/home/pi/ProfusionProject/RecordRawVideo/captureFolder"
+save_dir = "/media/pi/d650369d-5fad-4cd4-a76d-262f0b4cdb93/profusionFolder"
 recording_counter = 0  # Initialize recording counter
 
 # Ensure the save directory exists
@@ -104,15 +105,13 @@ camera1.configure(preview_config1)
 camera0.start()
 camera1.start()
 
-print("Press Enter to start recording..")
-input()  # Wait for Enter to be pressed
+# Wait for user to press Enter to stop the preview
+print("Press Enter to stop the preview...")
+input()
 
 # Stop the previews after Enter is pressed
 camera0.stop()
 camera1.stop()
-
-# Optionally add a short delay between stopping preview and starting recording
-time.sleep(1)  # You can adjust this delay as necessary
 
 print("\n================= Recording video now for " + str(duration) + " seconds =================")
 
@@ -144,9 +143,7 @@ process_camera_data("test0", size, 0)
 process_camera_data("test1", size, 1)
 
 print("\n================= Processing Data COMPLETE =================")
-print(f"\n Files saved at: {save_dir}\n\n Executing bash script to transfer data to Linux Laptop...")
+print(f"\n Files saved at: {save_dir}\n\n")
 
-# bash_script_path = "/home/pi/Onboard_VS_Streaming_RPI/PythonScripts/CaptureRawVideo/transfer.sh"
-# run_bash_script(bash_script_path)
-
-# print("Bash script execution complete.")
+# Save to USB drive
+# sudo chown -R pi:pi /media/pi/d650369d-5fad-4cd4-a76d-262f0b4cdb93/profusionFolder
