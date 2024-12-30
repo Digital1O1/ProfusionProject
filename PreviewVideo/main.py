@@ -5,10 +5,15 @@
 
 import time
 from picamera2 import Picamera2, Preview
+from libcamera import Transform  # Import the Transform class
+import libcamera
 
 # Initialize both cameras
 camera0 = Picamera2(camera_num=0)
 camera1 = Picamera2(camera_num=1)
+
+# Apply a horizontal flip to camera0
+# camera0.transform = Transform(hflip=1)  # Horizontal flip only
 
 # Start preview for both cameras
 camera0.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
@@ -17,6 +22,9 @@ camera1.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
 # Create preview configurations for both cameras
 preview_config0 = camera0.create_preview_configuration()
 preview_config1 = camera1.create_preview_configuration()
+
+preview_config0["transform"] = libcamera.Transform(hflip=1)
+
 
 # Configure both cameras with the preview configurations
 camera0.configure(preview_config0)

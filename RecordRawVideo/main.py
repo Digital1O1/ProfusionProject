@@ -8,6 +8,8 @@ from pidng.defs import *
 from picamera2 import Picamera2, Preview
 from picamera2.encoders import Encoder
 import os
+import libcamera
+from libcamera import Transform  # Import the Transform class
 
 # Function to ensure the save directory exists
 def ensure_directory(save_dir):
@@ -64,7 +66,7 @@ def create_dng(arr, size, camera_number, save_dir):
 
 # Main script
 size = (1920, 1080)
-save_dir = "/media/pi/YELLOW_USB/profusionFolder"
+save_dir = "/media/pi/15b690bf-d450-4c6a-aec7-a9a759d489dc/profusionFolder"
 recording_counter = 0  # Initialize recording counter
 
 # Ensure the save directory exists
@@ -72,17 +74,19 @@ ensure_directory(save_dir)
 
 print("\n\n\n================= Initializing camera parameters =================")
 
-camera0 = Picamera2(camera_num=0)
-camera1 = Picamera2(camera_num=1)
+irCamera = Picamera2(camera_num=0)
+visibleCamera = Picamera2(camera_num=1)
 
-video_config0 = camera0.create_video_configuration(raw={"format": 'SGBRG10', 'size': size})
-camera0.configure(video_config0)
-camera0.encode_stream_name = "raw"
+irCameraConfig = irCamera.create_video_configuration(raw={"format": 'SGBRG10', 'size': size})
+irCameraConfig["transform"] = Transform(hflip=1)  #horizontally flip IR camera
+
+irCamera.configure(irCameraConfig)
+irCamera.encode_stream_name = "raw"
 encoder0 = Encoder()
 
-video_config1 = camera1.create_video_configuration(raw={"format": 'SGBRG10', 'size': size})
-camera1.configure(video_config1)
-camera1.encode_stream_name = "raw"
+visibleCameraConfig = visibleCamera.create_video_configuration(raw={"format": 'SGBRG10', 'size': size})
+visibleCamera.configure(visibleCameraConfig)
+visibleCamera.encode_stream_name = "raw"
 encoder1 = Encoder()
 
 print("\n================= DONE =================")
@@ -92,40 +96,40 @@ duration = int(input("Enter the recording duration in seconds: "))
 
 # This section was to have a 'preview' mode before recording the raw data and is probably not needed
 # # Start preview for both cameras
-# camera0.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
-# camera1.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
+# irCamera.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
+# visibleCamera.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
 
-# preview_config0 = camera0.create_preview_configuration()
-# preview_config1 = camera1.create_preview_configuration()
+# preview_config0 = irCamera.create_preview_configuration()
+# preview_config1 = visibleCamera.create_preview_configuration()
 
 # # Configure both cameras
-# camera0.configure(preview_config0)
-# camera1.configure(preview_config1)
+# irCamera.configure(preview_config0)
+# visibleCamera.configure(preview_config1)
 
 # # Start both cameras for preview
-# camera0.start()
-# camera1.start()
+# irCamera.start()
+# visibleCamera.start()
 
 # # Wait for user to press Enter to stop the preview
 # print("Press Enter to stop the preview...")
 # input()
 
 # # Stop the previews after Enter is pressed
-# camera0.stop()
-# camera1.stop()
+# irCamera.stop()
+# visibleCamera.stop()
 
 print("\n================= Recording video now for " + str(duration) + " seconds =================")
 
 # Start recording for both cameras
-camera0.start_recording(encoder0, f'{save_dir}/visibleCamera_{recording_counter}.raw', pts=f"{save_dir}/visibleTimeStamps_{recording_counter}.txt")
-camera1.start_recording(encoder1, f'{save_dir}/irCamera_{recording_counter}.raw', pts=f"{save_dir}/irTimeStamps_{recording_counter}.txt")
+irCamera.start_recording(encoder0, f'{save_dir}/visibleCamera_{recording_counter}.raw', pts=f"{save_dir}/visibleTimeStamps_{recording_counter}.txt")
+visibleCamera.start_recording(encoder1, f'{save_dir}/irCamera_{recording_counter}.raw', pts=f"{save_dir}/irTimeStamps_{recording_counter}.txt")
 
 # Start countdown timer
 countdown_timer(duration)
 
 # Stop recording
-camera0.stop_recording()
-camera1.stop_recording()
+irCamera.stop_recording()
+visibleCamera.stop_recording()
 
 # Increment the recording counter for the next recording
 recording_counter += 1

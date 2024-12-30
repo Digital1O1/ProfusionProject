@@ -12,7 +12,7 @@ fi
 
 # Run the second Python script
 echo "Running script2.py..."
-python3 /home/pi/ProfusionProject/RecordRawVideo/main.py
+sudo python3 /home/pi/ProfusionProject/RecordRawVideo/main.py
 
 # Check if the second script ran successfully
 if [ $? -ne 0 ]; then
