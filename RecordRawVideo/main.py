@@ -64,7 +64,7 @@ def create_dng(arr, size, camera_number, save_dir):
 
 # Main script
 size = (1920, 1080)
-save_dir = "/media/pi/d650369d-5fad-4cd4-a76d-262f0b4cdb93/profusionFolder"
+save_dir = "/media/pi/YELLOW_USB/profusionFolder"
 recording_counter = 0  # Initialize recording counter
 
 # Ensure the save directory exists
@@ -90,34 +90,35 @@ print("\n================= DONE =================")
 # Input time in seconds
 duration = int(input("Enter the recording duration in seconds: "))
 
-# Start preview for both cameras
-camera0.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
-camera1.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
+# This section was to have a 'preview' mode before recording the raw data and is probably not needed
+# # Start preview for both cameras
+# camera0.start_preview(Preview.QTGL, x=100, y=100, width=640, height=480)
+# camera1.start_preview(Preview.QTGL, x=800, y=100, width=640, height=480)
 
-preview_config0 = camera0.create_preview_configuration()
-preview_config1 = camera1.create_preview_configuration()
+# preview_config0 = camera0.create_preview_configuration()
+# preview_config1 = camera1.create_preview_configuration()
 
-# Configure both cameras
-camera0.configure(preview_config0)
-camera1.configure(preview_config1)
+# # Configure both cameras
+# camera0.configure(preview_config0)
+# camera1.configure(preview_config1)
 
-# Start both cameras for preview
-camera0.start()
-camera1.start()
+# # Start both cameras for preview
+# camera0.start()
+# camera1.start()
 
-# Wait for user to press Enter to stop the preview
-print("Press Enter to stop the preview...")
-input()
+# # Wait for user to press Enter to stop the preview
+# print("Press Enter to stop the preview...")
+# input()
 
-# Stop the previews after Enter is pressed
-camera0.stop()
-camera1.stop()
+# # Stop the previews after Enter is pressed
+# camera0.stop()
+# camera1.stop()
 
 print("\n================= Recording video now for " + str(duration) + " seconds =================")
 
 # Start recording for both cameras
-camera0.start_recording(encoder0, f'{save_dir}/test0_{recording_counter}.raw', pts=f"{save_dir}/timestamp0_{recording_counter}.txt")
-camera1.start_recording(encoder1, f'{save_dir}/test1_{recording_counter}.raw', pts=f"{save_dir}/timestamp1_{recording_counter}.txt")
+camera0.start_recording(encoder0, f'{save_dir}/visibleCamera_{recording_counter}.raw', pts=f"{save_dir}/visibleTimeStamps_{recording_counter}.txt")
+camera1.start_recording(encoder1, f'{save_dir}/irCamera_{recording_counter}.raw', pts=f"{save_dir}/irTimeStamps_{recording_counter}.txt")
 
 # Start countdown timer
 countdown_timer(duration)
@@ -139,11 +140,11 @@ def process_camera_data(filename, size, camera_number):
     arr = np.frombuffer(buf, dtype=np.uint16).reshape((size[1], size[0]))
     create_dng(arr, size, camera_number, save_dir)
 
-process_camera_data("test0", size, 0)
-process_camera_data("test1", size, 1)
+process_camera_data("visibleCamera", size, 0)
+process_camera_data("irCamera", size, 1)
 
 print("\n================= Processing Data COMPLETE =================")
-print(f"\n Files saved at: {save_dir}\n\n")
+print(f"\nFiles saved at: {save_dir}\n\n")
 
 # Save to USB drive
 # sudo chown -R pi:pi /media/pi/d650369d-5fad-4cd4-a76d-262f0b4cdb93/profusionFolder
