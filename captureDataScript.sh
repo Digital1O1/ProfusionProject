@@ -11,7 +11,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run the second Python script
-echo "Running script2.py..."
+echo "Running Raw Video Recording Script..."
 python3 /home/pi/ProfusionProject/RecordRawVideo/main.py
 
 # Check if the second script ran successfully
@@ -20,4 +20,3 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Both scripts executed successfully!"
