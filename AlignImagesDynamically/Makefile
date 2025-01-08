@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall  -std=c++17 -g 
+CXXFLAGS = -Wall  -std=c++17
 
 # Include directories for OpenCV
 OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) -I /home/pi/ProfusionProject/AlignImages/include/.
