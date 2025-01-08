@@ -3,14 +3,14 @@ CXX = g++
 CXXFLAGS = -Wall  -std=c++17 -g 
 
 # Include directories for OpenCV
-OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) -I /root/ProfusionProject/AlignImages/include/.
+OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) 
 OPENCV_LIBS = $(shell pkg-config --libs opencv4)
 
 # Output binary
-TARGET = alignImages
+TARGET = maskTesting
 
 # Source files
-SRC = main.cpp yen_threshold.cpp
+SRC = main.cpp 
 
 # Build rules if multiple targets were present/needed which in this case is NOT
 # all: $(TARGET)
