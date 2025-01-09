@@ -3,7 +3,7 @@ CXX = g++
 CXXFLAGS = -Wall  -std=c++17 -g 
 
 # Include directories for OpenCV
-OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) -I /root/ProfusionProject/AlignImages/include/.
+OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) -I /home/digital101/ProfusionProject/AlignImages/include/.
 OPENCV_LIBS = $(shell pkg-config --libs opencv4)
 
 # Output binary

@@ -72,7 +72,7 @@ void remap_lut_threshold(cv::Mat &src, cv::Mat &dst, float k, int threshold, int
     }
     cv::LUT(src, lut, dst);
 }
-void frameInformation(cv::Mat src, std::string name)
+void frameInformation(std::string name, cv::Mat src)
 {
     // Extract depth and channels from the type
     int depth = src.depth();
@@ -155,7 +155,6 @@ cv::Mat ImgProc_YenThreshold(cv::Mat src, bool compressed, double &foundThresh)
 
     // std::cout <<"yen_threshold : " << yen_threshold << std::endl;
 
-
     // // Apply threshold and set transparency
     // cv::Mat thresholded_(cl.size(), CV_8UC4); // Create 4-channel output
     // for (int y = 0; y < cl.rows; y++) {
@@ -170,7 +169,6 @@ cv::Mat ImgProc_YenThreshold(cv::Mat src, bool compressed, double &foundThresh)
     //         }
     //     }
     // }
-
 
     // Use yen_threshold set alpha to 0 or something like that
     foundThresh = yen_threshold;
@@ -232,7 +230,7 @@ void captureIRFrames(VideoCapture &cap, Mat &frame)
 int main()
 {
     // ------------------ [ YAML STUFF ] ------------------ //
-    std::string filename = "/root/Onboard_VS_Streaming_RPI/GStreamer Folder/Homography_GStreamer_BW/homography_matrix.yaml";
+    std::string filename = "/home/digital101/Onboard_VS_Streaming_RPI/GStreamer Folder/Homography_GStreamer_BW/homography_matrix.yaml";
     std::cout << "\nOpening file: " << filename << std::endl;
 
     // Open the file using FileStorage
@@ -262,8 +260,8 @@ int main()
 
     // ------------------ [ READ TIFF IMAGES ] ------------------ //
 
-    cv::Mat irImage = cv::imread("/root/ProfusionProject/AlignImages/images/irCamera_0-2-mod.tif", cv::IMREAD_UNCHANGED);
-    cv::Mat visibleImage = cv::imread("/root/ProfusionProject/AlignImages/images/visibleCamera_0-1mod.tif", cv::IMREAD_UNCHANGED);
+    cv::Mat irImage = cv::imread("/home/digital101/ProfusionProject/AlignImages/images/irCamera_0-2-mod.tif", cv::IMREAD_UNCHANGED);
+    cv::Mat visibleImage = cv::imread("/home/digital101/ProfusionProject/AlignImages/images/visibleCamera_0-1mod.tif", cv::IMREAD_UNCHANGED);
 
     if (irImage.empty() || visibleImage.empty())
     {
@@ -271,10 +269,10 @@ int main()
         return -1;
     }
 
-    // HAVE TO NORMALIZE THE VISIBLE DATA AS WELL
+    // Normalize 16bit TIFF data to 8bit
     if (irImage.depth() != CV_8U)
     {
-        //std::cout << "Normalizing IR frame to 8-bits" << std::endl;
+        // std::cout << "Normalizing IR frame to 8-bits" << std::endl;
         double minVal, maxVal;
         cv::minMaxLoc(irImage, &minVal, &maxVal); // Get min and max pixel values
         irImage.convertTo(irImage, CV_8U, 255.0 / (maxVal - minVal), -minVal * (255.0 / (maxVal - minVal)));
@@ -288,7 +286,7 @@ int main()
 
     if (visibleImage.depth() != CV_8U)
     {
-        //std::cout << "Normalizing Visible frame to 8-bits" << std::endl;
+        // std::cout << "Normalizing Visible frame to 8-bits" << std::endl;
         double minVal, maxVal;
         cv::minMaxLoc(visibleImage, &minVal, &maxVal); // Get min and max pixel values
         visibleImage.convertTo(visibleImage, CV_8U, 255.0 / (maxVal - minVal), -minVal * (255.0 / (maxVal - minVal)));
@@ -311,7 +309,7 @@ int main()
     remapMin = (int)foundThresh;
     int topkvalue = 0;
     remap_lut_threshold(yenThresholdedFrame, processedFrame, 0.1, remapMin, topkvalue);
-    //cv::imshow("Thresholded with Transparency", processedFrame);
+    // cv::imshow("Thresholded with Transparency", processedFrame);
 
     cv::Ptr<cv::Mat> ColoredFrame;
     ColoredFrame = cv::Ptr<cv::Mat>(new cv::Mat());
@@ -324,10 +322,12 @@ int main()
 
     //  ------------------ [ SET PHYSICAL OFFSET FOR IR FRAME ] ------------------ //
 
-    cv::Mat warpedVisibleFrame, visibleToIRProjectedFrame;
+    cv::Mat visibleWarpedFrame, visibleToIRProjectedFrame;
     // Set translation values
-    int offsetX = 115; // Negative value moves left | Positive values to the right
-    int offsetY = 65;  // Negative values moves up | Positive values move down
+
+    // These offset values work on home laptop
+    int offsetX = -45; // Negative value moves left | Positive values to the right
+    int offsetY = 90;  // Negative values moves up | Positive values move down
     cv::Mat translationMatrix = (cv::Mat_<double>(2, 3) << 1, 0, offsetX, 0, 1, offsetY);
 
     cv::Mat translatedIRFrameColored;
@@ -336,60 +336,67 @@ int main()
     // Move translationMatrix to align with visible frame
     cv::warpAffine(*ColoredFrame, translatedIRFrameColored, translationMatrix, irImage.size());
 
-    // Apply homography to visible frame
-    cv::warpPerspective(visibleImage, warpedVisibleFrame, visibleToInfraredHomography, visibleImage.size());
+    // Apply homography to visibleImage
+    cv::warpPerspective(visibleImage, visibleWarpedFrame, visibleToInfraredHomography, visibleImage.size());
 
-    // Needed since ColoredMap is 4 channels while warpedVisibleFrame before cvtColor() is grayscale (One channel) and addWeighted() needs both frames to have the same number of channels
-    // std::cout << "Chagning warpedVisibleFrame channels  " << std::endl;
-    cv::cvtColor(warpedVisibleFrame, warpedVisibleFrame, cv::COLOR_GRAY2BGRA);
+    // Needed since ColoredMap is 4 channels while visibleWarpedFrame before cvtColor() is grayscale (One channel) and addWeighted() needs both frames to have the same number of channels
+    // std::cout << "Chagning visibleWarpedFrame channels  " << std::endl;
+    
+    visibleWarpedFrame.convertTo(visibleWarpedFrame, (*ColoredFrame).type());
+    cv::cvtColor(visibleWarpedFrame, visibleWarpedFrame, cv::COLOR_GRAY2BGRA);
 
-
-    // -------------- APPLY MASK -------------------- //
-
-    std::vector<cv::Mat> irChannels;
-    cv::split(translatedIRFrameColored, irChannels);
-
-    cv::Mat mask;
-
-    // void cv::inRange(cv::InputArray src, cv::InputArray lowerb, cv::InputArray upperb, cv::OutputArray dst)
-    cv::inRange(translatedIRFrameColored, cv::Scalar(100, 0, 0, 255), cv::Scalar(140, 100, 255, 255), mask);
-
-
-
-
-    // Set the alpha channel (4th channel) to 0 for the blue pixels
-    irChannels[3].setTo(0, mask);
-
-
-    // Merge back the channels
-    cv::merge(irChannels, translatedIRFrameColored);
-
+    // Used for a sanity check to determine a particular pixel value after COLORJET was applied to the image
     cv::Mat debugPixel;
     translatedIRFrameColored.convertTo(debugPixel, CV_32F); // Convert to floating-point for better analysis
     std::cout << "Pixel value at (x, y): " << debugPixel.at<Vec4b>(400, 400) << std::endl;
 
-    // Draw a circle
-    cv::Point center(400, 400); // Center of the circle
-    int radius = 10;           // Radius of the circle
+    // Draw a circle to indicate what point was sampled
+    cv::Point center(400, 400);    // Center of the circle
+    int radius = 10;               // Radius of the circle
     cv::Scalar color(255, 255, 0); // Color (blue in this case)
-    int thickness = 2;          // Thickness of the circle outline
+    int thickness = 2;             // Thickness of the circle outline
 
-    cv::circle(translatedIRFrameColored, center, radius, color, thickness);
-    //cv::resize(translatedIRFrameColored,translatedIRFrameColored,(cv::Size(640,480)));
-    cv::imshow("translatedIRFrameColored", translatedIRFrameColored);
+    // cv::circle(translatedIRFrameColored, center, radius, color, thickness);
+    //  cv::resize(translatedIRFrameColored,translatedIRFrameColored,(cv::Size(640,480)));
+    // cv::imshow("translatedIRFrameColored", translatedIRFrameColored);
 
+    // frameInformation("translatedIRFrameColored", translatedIRFrameColored);
+
+    cv::Mat mask;
+    std::vector<cv::Mat> irChannels;
+
+    // Split the channels of the 4-channel image
+    cv::split(translatedIRFrameColored, irChannels);
+
+    // Define the range for blue pixels
+    // cv::Scalar(BGRA)
+    cv::inRange(translatedIRFrameColored, cv::Scalar(100, 0, 0, 0), cv::Scalar(255, 100, 100, 255), mask);
+
+    // Set the alpha channel to 0 where the mask is true
+    irChannels[3].setTo(0, mask);
+
+    // Set RGB channels to 0 (black) where the mask is true
+    for (int c = 0; c < 3; c++)
+    {
+        irChannels[c].setTo(0, mask);
+    }
+
+    // Merge the channels back into the original image
+    cv::merge(irChannels, translatedIRFrameColored);
 
     // Blend the translated IR frame with the visible frame
     // void cv::addWeighted(cv::InputArray src1, double alpha, cv::InputArray src2, double beta, double gamma, cv::OutputArray dst, int dtype = -1)
-    //v::addWeighted(translatedIRFrameColored, THRESHOLD_WEIGHT, warpedVisibleFrame, WARPEDFRAME_WEIGHT, 0, visibleToIRProjectedFrame);
+    cv::addWeighted(translatedIRFrameColored, THRESHOLD_WEIGHT, visibleWarpedFrame, WARPEDFRAME_WEIGHT, 0, visibleToIRProjectedFrame);
 
     //  ------------------ [ DISPLAY/WRITE  ] ------------------ //
 
     // cv::Mat displayWarpedImage;
 
-    // cv::imshow("visibleToIRProjectedFrame", visibleToIRProjectedFrame);
+    cv::imshow("visibleToIRProjectedFrame", visibleToIRProjectedFrame);
+    // cv::imshow("Mask", mask);
+
     //   Save the final blended image
-    //  cv::imwrite("FinalImage.PNG", visibleToIRProjectedFrame);
+    cv::imwrite("FinalImage.PNG", visibleToIRProjectedFrame);
 
     // cv::destroyAllWindows();
     cv::waitKey(0);
