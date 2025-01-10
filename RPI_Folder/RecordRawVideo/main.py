@@ -62,10 +62,9 @@ def create_dng(arr, size, camera_number, save_dir):
     r.options(t, path=save_dir, compress=False)
     r.convert(arr, filename=save_path)
 
-# Main script
 size = (1920, 1080)
-save_dir = "/media/pi/YELLOW_USB/profusionFolder"
-recording_counter = 0  # Initialize recording counter
+save_dir = "/media/pi/PNY_USB64/ProfusionFolder"
+recording_counter = 0  # Initialize recording counter to ensure old files don't get overwritten 
 
 # Ensure the save directory exists
 ensure_directory(save_dir)
@@ -138,7 +137,7 @@ def process_camera_data(filename, size, camera_number):
     with open(raw_file, "rb") as f:
         buf = f.read(size[0] * size[1] * 2)
     arr = np.frombuffer(buf, dtype=np.uint16).reshape((size[1], size[0]))
-    create_dng(arr, size, camera_number, save_dir)
+    # create_dng(arr, size, camera_number, save_dir)
 
 process_camera_data("visibleCamera", size, 0)
 process_camera_data("irCamera", size, 1)
