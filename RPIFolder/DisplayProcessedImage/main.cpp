@@ -8,12 +8,14 @@ namespace fs = std::filesystem;
 
 int main()
 {
-    std::string watch_dir = "/home/pi/ProfusionProject/DisplayProcessedImage/IncomingData"; // Directory to monitor
-    std::string file_extension = ".png";                                                    // File extension to watch for
+    // std::string watch_dir = "/home/pi/ProfusionProject/RPIFolder/DisplayProcessedImage/IncomingData";
+    std::string watch_dir = "./IncomingData";
+
+    std::string file_extension = ".PNG"; // File extension to watch for
 
     std::cout << "Monitoring directory: " << watch_dir << " for PNG files...\n";
-
-    while (true)
+    bool runProgram = true;
+    while (runProgram)
     {
         bool file_found = false;
 
@@ -41,6 +43,9 @@ int main()
 
                     // Wait for a key press
                     cv::waitKey(0);
+                    cv::destroyAllWindows();
+                    // file_found = true;
+                    // runProgram = false;
 
                     // Optionally, delete the file after displaying
                     fs::remove(file_path);
@@ -55,6 +60,7 @@ int main()
         // If no file is found, wait for a short period before checking again
         if (!file_found)
         {
+            std::cout << "Waiting for file..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
