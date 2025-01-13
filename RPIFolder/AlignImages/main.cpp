@@ -162,9 +162,9 @@ void captureIRFrames(VideoCapture &cap, Mat &frame)
 
 int main()
 {
-    
+
     // Path to the YAML file
-    std::string filename = "/home/pi/Onboard_VS_Streaming_RPI/GStreamer Folder/ApplyHomographyGStreamer/homography_matrix.yaml";
+    std::string filename = "/home/pi/Onboard_VS_Streaming_RPI/Mock CVG ProgramBUSTER/build/homography_matrix.yaml";
     std::cout << "\nOpening file: " << filename << std::endl;
 
     // Open the file using FileStorage
@@ -225,13 +225,13 @@ int main()
     // cv::imshow("visibleImage", visibleImage);
     cv::Mat warpedFrame, visibleToIRProjectedFrame;
 
-
     cv::warpPerspective(visibleImage, warpedFrame, visibleToInfraredHomography, irImage.size());
 
     cv::addWeighted(irImage, THRESHOLD_WEIGHT, visibleImage, WARPEDFRAME_WEIGHT, 0, visibleToIRProjectedFrame);
     cv::imshow("FinalImage", visibleToIRProjectedFrame);
     cv::imwrite("FinalImage.PNG", visibleToIRProjectedFrame);
 
+    std::cout << "Press any key to exit the program..." << std::endl;
     cv::waitKey(0);
 
     cv::destroyAllWindows();
