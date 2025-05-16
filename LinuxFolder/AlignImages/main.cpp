@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <string>
+#include <fstream>
 
 #define NOIR_CAMERA 0
 #define VISIBLE_CAMERA 1
@@ -230,7 +231,7 @@ void captureIRFrames(VideoCapture &cap, Mat &frame)
 int main()
 {
     // ------------------ [ YAML STUFF ] ------------------ //
-    std::string filename = "/home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/homography.yml";
+    std::string filename = "/root/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/homography.yml";
     std::cout << "\nOpening YAML file at the following path : " << filename << std::endl;
 
     // Open the file using FileStorage
@@ -259,8 +260,8 @@ int main()
 
     // ------------------ [ READ IMAGES ] ------------------ //
 
-    std::string irImagePath = "/home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/ir.jpg";
-    std::string visibleImagePath = "/home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/visible.jpg";
+    std::string irImagePath = "/root/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/ir.jpg";
+    std::string visibleImagePath = "/root/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/visible.jpg";
 
     cv::Mat irImage = cv::imread(irImagePath, cv::IMREAD_UNCHANGED);
     cv::Mat visibleImage = cv::imread(visibleImagePath, cv::IMREAD_GRAYSCALE);
@@ -327,9 +328,13 @@ int main()
     cv::Mat visibleWarpedFrame, visibleToIRProjectedFrame;
     // Set translation values
 
-    // These offset values work on home laptop
-    int offsetX = -45; // Negative value moves left | Positive values to the right
-    int offsetY = 90;  // Negative values moves up | Positive values move down
+    // These offset values work on home laptop for Profusion study
+    // int offsetX = -45; // Negative value moves left | Positive values to the right
+    // int offsetY = 90;  // Negative values moves up | Positive values move down
+
+    // Testing for streaming
+    int offsetX = 41; // Negative value moves left | Positive values to the right
+    int offsetY = -66;  // Negative values moves up | Positive values move down
 
     // START WHILE LOOP HERE
     while(true)
@@ -402,12 +407,12 @@ int main()
 
 
     int key = cv::waitKey(10);
-if (key == 27) break;              // ESC to exit
-else if (key == 'w') offsetY -= 1; // Move IR image up
-else if (key == 's') offsetY += 1; // Move IR image down
-else if (key == 'a') offsetX -= 1; // Move IR image left
-else if (key == 'd') offsetX += 1; // Move IR image right
-else if (key == 'x') {
+    if (key == 27) break;              // ESC to exit
+    else if (key == 'w') offsetY -= 1; // Move IR image up
+    else if (key == 's') offsetY += 1; // Move IR image down
+    else if (key == 'a') offsetX -= 1; // Move IR image left
+    else if (key == 'd') offsetX += 1; // Move IR image right
+    else if (key == 'x') {
     std::ofstream out("offset.txt");
     if (out.is_open()) {
         out << offsetX << " " << offsetY << "\n";
@@ -419,13 +424,13 @@ else if (key == 'x') {
 
     }
     
-    
+}
     // cv::imshow("Mask", mask);
 
     //   Save the final blended image
     //cv::imwrite("FinalImage.PNG", visibleToIRProjectedFrame);
 
-    // cv::destroyAllWindows();
+    cv::destroyAllWindows();
     //cv::waitKey(0);
 
 

@@ -3,8 +3,9 @@ CXX = g++
 CXXFLAGS = -Wall  -std=c++17
 
 # Include directories for OpenCV
-OPENCV_CFLAGS = $(shell pkg-config --cflags opencv) -I /home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/include
-OPENCV_LIBS = $(shell pkg-config --libs opencv)
+# Change back to opencv if using Buster
+OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4) -I /root/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/include
+OPENCV_LIBS = $(shell pkg-config --libs opencv4)
 
 # Output binary
 TARGET = alignImages
