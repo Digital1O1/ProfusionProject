@@ -257,7 +257,7 @@ int main()
         return -1;
     }
 
-    // ------------------ [ READ IMAGES ] ------------------ //
+    // ------------------ [ READ TIFF IMAGES ] ------------------ //
 
     std::string irImagePath = "/home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/ir.jpg";
     std::string visibleImagePath = "/home/pi/Desktop/CVG-Tietronix/ProfusionProject/LinuxFolder/AlignImages/visible.jpg";
@@ -299,7 +299,7 @@ int main()
             return -1;
         }
     }
-    //cv::imshow("irImage", irImage);
+    cv::imshow("irImage", irImage);
 
     // ------------------ [ APPLY THRESHOLDING ALGORITHM TO IR FRAME ] ------------------ //
     double foundThresh;
@@ -330,10 +330,6 @@ int main()
     // These offset values work on home laptop
     int offsetX = -45; // Negative value moves left | Positive values to the right
     int offsetY = 90;  // Negative values moves up | Positive values move down
-
-    // START WHILE LOOP HERE
-    while(true)
-    {
     cv::Mat translationMatrix = (cv::Mat_<double>(2, 3) << 1, 0, offsetX, 0, 1, offsetY);
 
     cv::Mat translatedIRFrameColored;
@@ -399,27 +395,6 @@ int main()
     // cv::Mat displayWarpedImage;
 
     cv::imshow("visibleToIRProjectedFrame", visibleToIRProjectedFrame);
-
-
-    int key = cv::waitKey(10);
-if (key == 27) break;              // ESC to exit
-else if (key == 'w') offsetY -= 1; // Move IR image up
-else if (key == 's') offsetY += 1; // Move IR image down
-else if (key == 'a') offsetX -= 1; // Move IR image left
-else if (key == 'd') offsetX += 1; // Move IR image right
-else if (key == 'x') {
-    std::ofstream out("offset.txt");
-    if (out.is_open()) {
-        out << offsetX << " " << offsetY << "\n";
-        std::cout << "Saved offset: (" << offsetX << ", " << offsetY << ")\n";
-        out.close();
-    } else {
-        std::cerr << "Failed to write to offset.txt\n";
-    }
-
-    }
-    
-    
     // cv::imshow("Mask", mask);
 
     //   Save the final blended image
